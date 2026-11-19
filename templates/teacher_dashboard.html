@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard — MPI</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root{
+    --ink:#161B33; --muted:#6B7291; --line:#E7EAF4; --bg:#F3F5FB; --paper:#FFFFFF;
+    --sidebar-bg:#0E1130; --sidebar-bg-2:#151936;
+    --accent:#C6952F; --accent-soft:#C6952F14; --accent-dim:#C6952F33;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',-apple-system,sans-serif;}
+
+  /* Topbar */
+  .topbar{
+    position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:14px;
+    padding:14px 26px; background:#fff; border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,var(--accent),#E7C877);
+    display:flex; align-items:center; justify-content:center; color:#3a2c05; font-size:14px; flex-shrink:0;
+  }
+  .brand-name{font-family:'Sora',sans-serif; font-weight:800; font-size:16px;}
+  .brand-name small{display:block; font-weight:500; font-size:9.5px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase;}
+  .topbar .spacer{flex:1;}
+  .role-pill{
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-dim);
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:4px 10px; border-radius:20px;
+  }
+  .logout-btn{
+    display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:var(--muted);
+    border:1px solid var(--line); padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600;
+  }
+  .logout-btn:hover{color:#D23C3C; border-color:#D23C3C55;}
+
+  /* Layout */
+  .wrap{max-width:1080px; margin:0 auto; padding:26px 20px 60px;}
+
+  .hero{
+    display:flex; align-items:center; gap:18px; background:linear-gradient(135deg,var(--sidebar-bg),var(--sidebar-bg-2));
+    color:#fff; border-radius:16px; padding:22px 26px; margin-bottom:22px;
+  }
+  .hero-photo{
+    width:64px; height:64px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); flex-shrink:0; background:#222646;
+  }
+  .hero-photo-placeholder{
+    width:64px; height:64px; border-radius:14px; border:2px solid var(--accent); background:#222646;
+    display:flex; align-items:center; justify-content:center; color:#B8BEE8; flex-shrink:0;
+  }
+  .hero-info h2{font-family:'Sora',sans-serif; font-size:20px; margin:0 0 4px;}
+  .hero-info .sub{font-size:13px; color:#B8BEE8;}
+  .hero-info .sub b{color:#fff;}
+
+  .no-profile{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:40px; text-align:center; color:var(--muted);
+  }
+
+  .section{margin-bottom:26px;}
+  .section-head{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .section-head i{color:var(--accent);}
+  .section-head h3{font-family:'Sora',sans-serif; font-size:15.5px; margin:0;}
+  .section-head .count{
+    margin-left:auto; font-size:11.5px; color:var(--muted); background:var(--bg); border:1px solid var(--line);
+    padding:2px 10px; border-radius:20px;
+  }
+
+  .panel{background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+    padding:10px 16px; background:#FAFBFE; border-bottom:1px solid var(--line);
+  }
+  td{padding:11px 16px; border-bottom:1px solid var(--line); color:var(--ink);}
+  tr:last-child td{border-bottom:0;}
+  .empty-row{padding:26px; text-align:center; color:var(--muted); font-size:13px;}
+
+  .status-pill{font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:capitalize;}
+  .status-present{background:#1CB88414; color:#1CB884;}
+  .status-absent{background:#FF5C5C14; color:#D23C3C;}
+  .status-late, .status-leave{background:#F6A50914; color:#C6952F;}
+
+  .amount{font-family:'JetBrains Mono',monospace; font-weight:600;}
+  .link-btn{
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--accent); text-decoration:none;
+  }
+  .link-btn:hover{text-decoration:underline;}
+
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width: 760px){ .grid-2{grid-template-columns:1fr;} .hero{flex-wrap:wrap;} }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><i class="fas fa-graduation-cap"></i></div>
+      <div class="brand-name">MPI<small>Teacher Portal</small></div>
+    </div>
+    <div class="spacer"></div>
+    <span class="role-pill">Faculty</span>
+    <a class="logout-btn" href="{% url 'logout' %}"><i class="fas fa-arrow-right-from-bracket"></i> Logout</a>
+  </div>
+
+  <div class="wrap">
+
+    {% if teacher %}
+      <div class="hero">
+        {% if teacher.teacher_image %}
+          <img src="{{ teacher.teacher_image.url }}" class="hero-photo" alt="{{ teacher.first_name }}">
+        {% else %}
+          <div class="hero-photo-placeholder"><i class="fas fa-user fa-lg"></i></div>
+        {% endif %}
+        <div class="hero-info">
+          <h2>Welcome, {{ teacher.first_name }} {{ teacher.last_name }}</h2>
+          <div class="sub">
+            <b>{{ teacher.designation }}</b> · {{ teacher.department.name }} Department
+            &nbsp;|&nbsp; <i class="fas fa-phone"></i> {{ teacher.phone }}
+            &nbsp;|&nbsp; <i class="fas fa-envelope"></i> {{ teacher.email }}
+          </div>
+        </div>
+        <div style="margin-left:auto;">
+          <a class="link-btn" style="color:#fff;" href="{% url 'teacher_id_card' teacher.id %}"><i class="fas fa-id-card"></i> View ID Card</a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <i class="fas fa-chalkboard"></i>
+          <h3>My Class Routine</h3>
+          <span class="count">{{ routine|length }} classes</span>
+        </div>
+        <div class="panel">
+          {% if routine %}
+            <table>
+              <thead><tr><th>Day</th><th>Subject</th><th>Department</th><th>Time</th><th>Room</th></tr></thead>
+              <tbody>
+                {% for r in routine %}
+                  <tr>
+                    <td>{{ r.day }}</td>
+                    <td>{{ r.subject }}</td>
+                    <td>{{ r.department.name }}</td>
+                    <td>{{ r.start_time|time:"h:i A" }} – {{ r.end_time|time:"h:i A" }}</td>
+                    <td>{{ r.room_no }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="empty-row">No classes scheduled yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="section">
+          <div class="section-head">
+            <i class="fas fa-calendar-check"></i>
+            <h3>Recent Attendance</h3>
+            <span class="count">last {{ recent_attendance|length }}</span>
+          </div>
+          <div class="panel">
+            {% if recent_attendance %}
+              <table>
+                <thead><tr><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                  {% for a in recent_attendance %}
+                    <tr>
+                      <td>{{ a.date|date:"d M Y" }}</td>
+                      <td><span class="status-pill status-{{ a.status|lower }}">{{ a.status }}</span></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <div class="empty-row">No attendance records yet.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <i class="fas fa-sack-dollar"></i>
+            <h3>Recent Salary Payments</h3>
+            <span class="count">last {{ salary_payments|length }}</span>
+          </div>
+          <div class="panel">
+            {% if salary_payments %}
+              <table>
+                <thead><tr><th>Period</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+                <tbody>
+                  {% for s in salary_payments %}
+                    <tr>
+                      <td>{{ s.month }} {{ s.year }}</td>
+                      <td class="amount">৳ {{ s.amount }}</td>
+                      <td>{{ s.payment_date|date:"d M Y" }}</td>
+                      <td><a class="link-btn" href="{% url 'salary_receipt' s.id %}"><i class="fas fa-receipt"></i> Voucher</a></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <div class="empty-row">No salary payments recorded yet.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="no-profile">
+        <i class="fas fa-triangle-exclamation fa-lg" style="color:var(--accent);"></i>
+        <p style="margin-top:10px;">Your account isn't linked to a teacher record yet. Contact an administrator.</p>
+      </div>
+    {% endif %}
+
+  </div>
+
+</body>
+</html>

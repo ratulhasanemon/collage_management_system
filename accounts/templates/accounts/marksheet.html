@@ -1,0 +1,63 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}My Marksheet{% endblock %}
+{% block role_label %}Student Portal{% endblock %}
+{% block role_pill %}Student{% endblock %}
+{% block header_title %}My Marksheet{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'student_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <div class="side-link active"><i class="fas fa-file-lines"></i> My Marksheet</div>
+  <a class="side-link" href="{% url 'get_student_attendance_report' student.id %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end;">
+      <div>
+        <label for="semester" style="display:block; font-size:13px; margin-bottom:4px;">Semester</label>
+        <select name="semester" id="semester">
+          {% for sem_value, sem_label in semester_choices %}
+            <option value="{{ sem_value }}" {% if sem_value == semester %}selected{% endif %}>{{ sem_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="link-btn"><i class="fas fa-filter"></i> View</button>
+    </form>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Total Obtained</div><div class="value" style="font-size:16px;">{{ total_obtained }}</div></div>
+    <div class="stat-card"><div class="label">Total Full Marks</div><div class="value" style="font-size:16px;">{{ total_full }}</div></div>
+    <div class="stat-card"><div class="label">Percentage</div><div class="value">{{ percentage }}%</div></div>
+    <div class="stat-card"><div class="label">Grade</div><div class="value">{{ grade }}</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Subject-wise Marks — {{ semester_label }}</h2>
+    {% if has_data %}
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Subject</th><th>Marks Obtained</th><th>Full Marks</th><th>Grade</th></tr></thead>
+      <tbody>
+        {% for s in subjects %}
+        <tr>
+          <td>{{ s.subject }}</td>
+          <td>{{ s.marks_obtained }}</td>
+          <td>{{ s.full_marks }}</td>
+          <td>{{ s.grade }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+      <p class="empty">No exam marks recorded for {{ semester_label }} yet.</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

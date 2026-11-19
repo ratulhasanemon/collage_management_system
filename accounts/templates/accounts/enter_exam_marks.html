@@ -1,0 +1,137 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}Enter Exam Marks{% endblock %}
+{% block role_label %}Faculty Portal{% endblock %}
+{% block role_pill %}Teacher{% endblock %}
+{% block header_title %}Enter Exam Marks{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'teacher_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  {% if teacher %}
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <a class="side-link" href="{% url 'my_attendance' %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+  {% endif %}
+  <a class="side-link" href="{% url 'student_directory' %}"><i class="fas fa-users"></i> Student Directory</a>
+  <a class="side-link active" href="{% url 'enter_exam_marks_form' %}"><i class="fas fa-pen"></i> Enter Exam Marks</a>
+  <a class="side-link" href="{% url 'mark_student_attendance_form' %}"><i class="fas fa-clipboard-check"></i> Mark Student Attendance</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .narrow-wrap{max-width:720px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;}
+  .field label{display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:6px;}
+  .field select, .field input{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:13.5px; background:var(--surface-2);
+  }
+  .field select:focus, .field input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background:var(--surface);}
+  .subjects-head{display:flex; align-items:center; justify-content:space-between; margin:6px 0 10px;}
+  .subjects-head h4{font-family:'Sora',sans-serif; font-size:13.5px; margin:0;}
+  .add-row-btn{border:1px dashed var(--accent-dim); background:var(--accent-soft); color:var(--accent); border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer;}
+  .subject-row{display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-bottom:10px; align-items:center;}
+  .subject-row input{padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;}
+  .remove-row{border:0; background:transparent; color:var(--danger); cursor:pointer; font-size:15px;}
+  .submit-btn{border:0; border-radius:10px; padding:12px 22px; font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#fff; background:var(--accent); cursor:pointer;}
+  .msg{display:flex; gap:8px; font-size:13px; font-weight:600; padding:10px 14px; border-radius:10px; margin-bottom:16px;}
+  .msg-success{background:#1CB88414; color:var(--success); border:1px solid #1CB88433;}
+  .msg-error{background:#F0506E14; color:var(--danger); border:1px solid #F0506E33;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="narrow-wrap">
+  <p style="color:var(--text-muted); font-size:13px; margin:-6px 0 18px;">Only students from your classes are available below. Re-submitting for the same student &amp; semester replaces the marksheet.</p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
+        <i class="fas fa-circle-{% if message.tags == 'error' %}exclamation{% else %}check{% endif %}"></i> {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+      <div>
+        <label for="semester" style="display:block; font-size:13px; margin-bottom:4px;">Filter students by semester</label>
+        <select name="semester" id="semester">
+          <option value="">All Semesters</option>
+          {% for sem_value, sem_label in semester_choices %}
+            <option value="{{ sem_value }}" {% if sem_value == semester %}selected{% endif %}>{{ sem_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="link-btn"><i class="fas fa-filter"></i> Apply</button>
+    </form>
+  </div>
+
+  {% if students %}
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="filter_semester" value="{{ semester }}">
+      <div class="card">
+        <div class="row2">
+          <div class="field">
+            <label>Student</label>
+            <select name="student" required>
+              <option value="">Select student</option>
+              {% for s in students %}
+                <option value="{{ s.id }}">{{ s.roll }} — {{ s.first_name }} {{ s.last_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Semester</label>
+            <select name="semester" required>
+              <option value="">Select semester</option>
+              {% for value, label in semester_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="subjects-head">
+          <h4>Subjects &amp; Marks</h4>
+          <button type="button" class="add-row-btn" onclick="addSubjectRow()"><i class="fas fa-plus"></i> Add Subject</button>
+        </div>
+        <div id="subject-rows">
+          <div class="subject-row">
+            <input type="text" name="subject[]" placeholder="Subject name" required>
+            <input type="number" name="full_marks[]" placeholder="Full marks" value="100" min="1" required>
+            <input type="number" name="marks_obtained[]" placeholder="Obtained" step="0.01" min="0" required>
+            <button type="button" class="remove-row" onclick="removeSubjectRow(this)"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn"><i class="fas fa-floppy-disk"></i> Save Marksheet</button>
+    </form>
+  {% else %}
+    <div class="card">
+      <p class="empty">No students found for your classes yet. Make sure your class routine is set up.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  function addSubjectRow(){
+    const wrap = document.getElementById('subject-rows');
+    const row = document.createElement('div');
+    row.className = 'subject-row';
+    row.innerHTML = `
+      <input type="text" name="subject[]" placeholder="Subject name" required>
+      <input type="number" name="full_marks[]" placeholder="Full marks" value="100" min="1" required>
+      <input type="number" name="marks_obtained[]" placeholder="Obtained" step="0.01" min="0" required>
+      <button type="button" class="remove-row" onclick="removeSubjectRow(this)"><i class="fas fa-trash"></i></button>
+    `;
+    wrap.appendChild(row);
+  }
+  function removeSubjectRow(btn){
+    const wrap = document.getElementById('subject-rows');
+    if (wrap.children.length > 1) btn.closest('.subject-row').remove();
+  }
+</script>
+{% endblock %}

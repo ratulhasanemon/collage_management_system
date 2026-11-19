@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — {{ site_settings.college_name|default:"MPI" }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root{
+    --ink:#161B33; --muted:#6B7291; --line:#D9DEEC; --paper:#FFFFFF; --bg:#EEF1F8;
+    --sidebar-bg:#0E1130; --sidebar-bg-2:#151936;
+    --admin:#4F7CFF;   --admin-soft:#4F7CFF14;
+    --teacher:#C6952F; --teacher-soft:#C6952F14;
+    --student:#1CB884; --student-soft:#1CB88414;
+    --accent: var(--admin); --accent-soft: var(--admin-soft);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    font-family:'Inter',-apple-system,sans-serif;
+    display:flex; align-items:stretch;
+  }
+
+  /* ===== Left brand panel ===== */
+  .brand-panel{
+    flex:0 0 42%; display:flex; flex-direction:column; justify-content:space-between;
+    padding:48px 44px; color:#fff; position:relative; overflow:hidden;
+    background:linear-gradient(160deg,var(--sidebar-bg),var(--sidebar-bg-2));
+  }
+  .brand-panel::before{
+    content:""; position:absolute; inset:-40% -20% auto auto; width:520px; height:520px;
+    background:radial-gradient(circle at center, var(--admin) 0%, transparent 70%);
+    opacity:.18; border-radius:50%;
+  }
+  .brand-mark{
+    width:46px; height:46px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--admin),#8CA5FF);
+    display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff;
+    overflow:hidden;
+  }
+  .brand-top{display:flex; align-items:center; gap:12px; position:relative; min-width:0;}
+  .brand-top .name{font-family:'Sora',sans-serif; font-weight:800; font-size:22px; letter-spacing:.03em; min-width:0;}
+  .brand-top .name #brandName{display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top;}
+  .brand-top .name small{display:block; font-weight:500; font-size:11px; color:#9AA1CC; letter-spacing:.06em; text-transform:uppercase;}
+  .brand-mid{position:relative; margin-top:40px;}
+  .brand-mid h1{
+    font-family:'Sora',sans-serif; font-weight:700; font-size:32px; line-height:1.25; margin:0 0 14px; max-width:380px;
+  }
+  .brand-mid p{color:#B8BEE8; font-size:14.5px; line-height:1.6; max-width:360px; margin:0;}
+  .brand-features{list-style:none; margin:30px 0 0; padding:0; display:flex; flex-direction:column; gap:14px; position:relative;}
+  .brand-features li{display:flex; align-items:center; gap:10px; font-size:13.5px; color:#D6DAF3;}
+  .brand-features i{width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; font-size:12px; color:#8CA5FF; flex-shrink:0;}
+  .brand-foot{font-size:11.5px; color:#7B82B0; position:relative;}
+
+  /* ===== Right form panel ===== */
+  .form-panel{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:40px 24px;
+  }
+  .login-card{width:100%; max-width:400px;}
+  .login-head{margin-bottom:22px;}
+  .login-head h2{font-family:'Sora',sans-serif; font-weight:700; font-size:24px; margin:0 0 4px;}
+  .login-head p{color:var(--muted); font-size:13.5px; margin:0;}
+
+  /* Tabs */
+  .role-tabs{display:flex; gap:6px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:5px; margin-bottom:22px;}
+  .role-tab{
+    flex:1; border:0; background:transparent; border-radius:8px; padding:9px 8px;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:12.5px; color:var(--muted);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .role-tab i{font-size:12px;}
+  .role-tab.active{color:#fff;}
+  .role-tab[data-role="admin"].active{background:var(--admin);}
+  .role-tab[data-role="teacher"].active{background:var(--teacher);}
+  .role-tab[data-role="student"].active{background:var(--student);}
+
+  /* Messages */
+  .msg{
+    display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
+    padding:10px 14px; border-radius:10px; margin-bottom:16px;
+    background:#FF5C5C14; color:#D23C3C; border:1px solid #FF5C5C33;
+  }
+
+  /* Card */
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px;
+    padding:26px 26px 22px; box-shadow:0 12px 30px rgba(20,25,60,.07);
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); margin-bottom:6px;
+  }
+  .input-wrap{position:relative;}
+  .input-wrap i{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13.5px;
+  }
+  .input-wrap input{
+    width:100%; padding:11px 14px 11px 38px; border:1px solid var(--line); border-radius:10px;
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); background:#FBFCFF;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .input-wrap input:focus{
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background:#fff;
+  }
+  .field-hint{font-size:11.5px; color:var(--muted); margin-top:5px;}
+
+  .submit-btn{
+    width:100%; border:0; border-radius:10px; padding:12px 16px; margin-top:6px;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#fff; cursor:pointer;
+    background:var(--accent); display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:filter .15s ease;
+  }
+  .submit-btn:hover{filter:brightness(.94);}
+
+  .register-hint{text-align:center; margin-top:14px; font-size:13px; color:var(--muted);}
+  .register-hint a{font-weight:700; text-decoration:none;}
+
+  .login-foot{text-align:center; margin-top:18px; font-size:12px; color:var(--muted);}
+
+  @media (max-width: 860px){
+    body{flex-direction:column;}
+    .brand-panel{flex:0 0 auto; padding:34px 26px;}
+    .brand-mid h1{font-size:24px;}
+    .brand-features{display:none;}
+    .form-panel{padding:30px 20px 50px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand-panel">
+    <div class="brand-top">
+      <div class="brand-mark">
+        {% if site_settings.logo %}
+          <img src="{{ site_settings.logo.url }}" alt="Logo" style="width:100%;height:100%;object-fit:contain;background:#fff;padding:3px;box-sizing:border-box;border-radius:50%;">
+        {% else %}
+          <i class="fas fa-graduation-cap"></i>
+        {% endif %}
+      </div>
+      <div class="name"><span id="brandName">{{ site_settings.college_name|default:"MPI" }}</span><small>College &amp; Academic Management</small></div>
+    </div>
+
+    <div class="brand-mid">
+      <h1>One system for admins, Teachers, and students.</h1>
+      <p>Sign in with the account type that matches your role. Each dashboard only shows the information relevant to you.</p>
+      <ul class="brand-features">
+        <li><i class="fas fa-user-shield"></i> Admins manage the whole institution</li>
+        <li><i class="fas fa-chalkboard-teacher"></i> Teachers manage classes, notices &amp; salary</li>
+        <li><i class="fas fa-user-graduate"></i> Students see only their own records</li>
+      </ul>
+    </div>
+
+    <div class="brand-foot">© {% now "Y" %} {{ site_settings.college_name|default:"MPI" }}. All rights reserved.</div>
+  </div>
+
+  <div class="form-panel">
+    <div class="login-card">
+      <div class="login-head">
+        <h2>Welcome back</h2>
+        <p>Choose your account type to continue.</p>
+      </div>
+
+      <div class="role-tabs" role="tablist">
+        <button type="button" class="role-tab" data-role="admin"><i class="fas fa-user-shield"></i> Admin</button>
+        <button type="button" class="role-tab" data-role="teacher"><i class="fas fa-chalkboard-teacher"></i> Teacher</button>
+        <button type="button" class="role-tab" data-role="student"><i class="fas fa-user-graduate"></i> Student</button>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="msg"><i class="fas fa-circle-exclamation"></i> {{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="card">
+        <form method="POST" action="{% url 'login' %}">
+          {% csrf_token %}
+          <input type="hidden" name="login_type" id="login_type" value="{{ active_tab|default:'admin' }}">
+
+          <div class="field">
+            <label id="username-label" for="username">Username</label>
+            <div class="input-wrap">
+              <i class="fas fa-user"></i>
+              <input type="text" name="username" id="username" placeholder="Enter your username" required autocomplete="username">
+            </div>
+            <div class="field-hint" id="username-hint" style="display:none;">You can sign in with either your roll number or your username.</div>
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <i class="fas fa-arrow-right-to-bracket"></i> Sign in as Admin
+          </button>
+        </form>
+      </div>
+
+      <div class="register-hint" id="register-link"></div>
+
+      <div class="login-foot">Trouble signing in? Contact your institution's administrator.</div>
+    </div>
+  </div>
+
+<script>
+  (function(){
+    const tabs = document.querySelectorAll('.role-tab');
+    const loginType = document.getElementById('login_type');
+    const usernameLabel = document.getElementById('username-label');
+    const usernameInput = document.getElementById('username');
+    const usernameHint = document.getElementById('username-hint');
+    const submitBtn = document.getElementById('submit-btn');
+    const regLink = document.getElementById('register-link');
+
+    const copy = {
+      admin:   { label: 'Username',              placeholder: 'Enter your username',       btn: 'Sign in as Admin',   hint: false },
+      teacher: { label: 'Username',              placeholder: 'Enter your username',       btn: 'Sign in as Teacher', hint: false },
+      student: { label: 'Roll Number or Username', placeholder: 'e.g. 24CSE0091 or username', btn: 'Sign in as Student', hint: true }
+    };
+
+    const registerCopy = {
+      admin: '',
+      teacher: 'New teacher? <a href="/register/teacher/" style="color:var(--teacher);">Create your account</a>',
+      student: 'New student? <a href="/register/student/" style="color:var(--student);">Create your account</a>'
+    };
+
+    function setActive(role){
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.role === role));
+      loginType.value = role;
+      usernameLabel.textContent = copy[role].label;
+      usernameInput.placeholder = copy[role].placeholder;
+      usernameHint.style.display = copy[role].hint ? 'block' : 'none';
+      submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> ' + copy[role].btn;
+      regLink.innerHTML = registerCopy[role];
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => setActive(tab.dataset.role)));
+
+    setActive(loginType.value || 'admin');
+  })();
+
+  (function(){
+    function fitBrandName(){
+      var el = document.getElementById('brandName');
+      if (!el) return;
+      el.style.fontSize = '';
+      var computed = parseFloat(getComputedStyle(el).fontSize);
+      var minSize = 12;
+      var guard = 30;
+      while (el.scrollWidth > el.clientWidth && computed > minSize && guard-- > 0){
+        computed -= 0.5;
+        el.style.fontSize = computed + 'px';
+      }
+    }
+    fitBrandName();
+    window.addEventListener('resize', fitBrandName);
+  })();
+</script>
+
+</body>
+</html>

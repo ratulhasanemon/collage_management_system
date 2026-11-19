@@ -1,0 +1,86 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}Accounts Dashboard{% endblock %}
+{% block role_label %}Accounts Portal{% endblock %}
+{% block role_pill %}Accountant{% endblock %}
+{% block header_title %}Finance Overview{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-group-label">Menu</div>
+  <div class="side-link active"><i class="fas fa-gauge"></i> Overview</div>
+  <a class="side-link" href="{% url 'add_fee' %}"><i class="fas fa-money-bill"></i> Collect Fee</a>
+  <a class="side-link" href="{% url 'pay_salary' %}"><i class="fas fa-sack-dollar"></i> Pay Salary</a>
+  <a class="side-link" href="{% url 'add_transaction' %}"><i class="fas fa-file-invoice-dollar"></i> Add Transaction</a>
+  <a class="side-link" href="{% url 'add_fee_structure' %}"><i class="fas fa-table-list"></i> Fee Structure</a>
+  <a class="side-link" href="{% url 'add_transport_fee' %}"><i class="fas fa-bus"></i> Transport Fee</a>
+{% endblock %}
+
+{% block content %}
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Total Income</div><div class="value" style="color:var(--success);">৳ {{ total_income }}</div></div>
+    <div class="stat-card"><div class="label">Total Expense</div><div class="value" style="color:var(--danger);">৳ {{ total_expense }}</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Recent Fee Payments</h2>
+    {% if recent_fees %}
+    <table>
+      <thead><tr><th>Student</th><th>Roll</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        {% for f in recent_fees %}
+        <tr>
+          <td>{{ f.student.first_name }} {{ f.student.last_name }}</td>
+          <td>{{ f.student.roll }}</td>
+          <td>৳ {{ f.amount }}</td>
+          <td>{{ f.created_at|date:"d M Y" }}</td>
+          <td><a class="link-btn" href="{% url 'fee_receipt' f.id %}" target="_blank"><i class="fas fa-receipt"></i> Receipt</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">No fee payments yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Recent Salary Payments</h2>
+    {% if recent_salaries %}
+    <table>
+      <thead><tr><th>Teacher</th><th>Period</th><th>Amount</th><th></th></tr></thead>
+      <tbody>
+        {% for p in recent_salaries %}
+        <tr>
+          <td>{{ p.teacher.first_name }} {{ p.teacher.last_name }}</td>
+          <td>{{ p.month }} {{ p.year }}</td>
+          <td>৳ {{ p.amount }}</td>
+          <td><a class="link-btn" href="{% url 'salary_receipt' p.id %}" target="_blank"><i class="fas fa-receipt"></i> Receipt</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">No salary payments yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Recent Transactions</h2>
+    {% if recent_transactions %}
+    <table>
+      <thead><tr><th>Title</th><th>Type</th><th>Amount</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for t in recent_transactions %}
+        <tr>
+          <td>{{ t.title }}</td>
+          <td><span class="badge {% if t.type == 'income' %}badge-success{% else %}badge-danger{% endif %}">{{ t.type }}</span></td>
+          <td>৳ {{ t.amount }}</td>
+          <td>{{ t.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">No transactions yet.</p>
+    {% endif %}
+  </div>
+{% endblock %}

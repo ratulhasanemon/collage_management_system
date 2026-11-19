@@ -1,0 +1,137 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}Class Routine{% endblock %}
+{% block role_label %}{% if request.user.profile.role == 'student' %}Student Portal{% else %}Faculty Portal{% endif %}{% endblock %}
+{% block role_pill %}{% if request.user.profile.role == 'student' %}Student{% else %}Teacher{% endif %}{% endblock %}
+{% block header_title %}Class Routine{% endblock %}
+
+{% block sidebar_nav %}
+{% if request.user.profile.role == 'student' %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'student_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  {% if student %}
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link active" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <a class="side-link" href="{% url 'get_student_marksheet' student.id %}"><i class="fas fa-file-lines"></i> My Marksheet</a>
+  <a class="side-link" href="{% url 'get_student_attendance_report' student.id %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+  {% endif %}
+{% else %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'teacher_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  {% if teacher %}
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link active" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <a class="side-link" href="{% url 'my_attendance' %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+  {% endif %}
+  <a class="side-link" href="{% url 'student_directory' %}"><i class="fas fa-users"></i> Student Directory</a>
+  <a class="side-link" href="{% url 'enter_exam_marks_form' %}"><i class="fas fa-pen"></i> Enter Exam Marks</a>
+  <a class="side-link" href="{% url 'mark_student_attendance_form' %}"><i class="fas fa-clipboard-check"></i> Mark Student Attendance</a>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .schedule-banner{
+    position:relative; overflow:hidden; border-radius:20px; padding:30px 24px;
+    background:linear-gradient(120deg,var(--accent),#8CA5FF);
+    box-shadow:0 12px 30px var(--accent-dim); margin-bottom:22px; text-align:center;
+  }
+  .schedule-banner::before, .schedule-banner::after{
+    content:""; position:absolute; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.10);
+  }
+  .schedule-banner::before{ top:-70px; left:-50px; }
+  .schedule-banner::after{ bottom:-80px; right:-40px; }
+  .schedule-banner .deco{position:absolute; color:rgba(255,255,255,.35); font-size:20px;}
+  .schedule-banner .deco.d1{ top:16px; left:36px; transform:rotate(-12deg); }
+  .schedule-banner .deco.d2{ top:20px; right:44px; transform:rotate(14deg); }
+  .schedule-banner .deco.d3{ bottom:14px; left:60px; transform:rotate(8deg); }
+  .schedule-banner .deco.d4{ bottom:18px; right:64px; transform:rotate(-10deg); }
+  .schedule-banner h2{position:relative; font-family:'Sora',sans-serif; font-weight:800; font-size:24px; color:#fff; margin:0;}
+  .schedule-banner p{position:relative; color:rgba(255,255,255,.85); font-size:13px; margin:6px 0 0;}
+
+  .schedule-grid{width:100%; border-collapse:separate; border-spacing:8px; min-width:640px;}
+  .schedule-grid th{padding:0; border:0;}
+  .th-pill{
+    display:block; text-align:center; padding:10px 8px; border-radius:12px;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:13px; color:#fff;
+    background:linear-gradient(135deg,var(--accent),#8CA5FF); box-shadow:0 4px 10px var(--accent-dim);
+  }
+  .th-pill.time-head{ background:var(--text); }
+  .time-cell{
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:12px 8px; border-radius:12px; background:var(--surface-2);
+    border:1px solid var(--border); font-weight:700; font-size:12px; color:var(--text); white-space:nowrap;
+  }
+  .slot-cell{
+    border-radius:12px; border:1px solid var(--border); background:var(--surface);
+    padding:10px 10px; min-height:56px; vertical-align:middle;
+  }
+  .slot-cell.filled{background:var(--accent-soft); border-color:var(--accent-dim);}
+  .slot-subject{font-family:'Sora',sans-serif; font-weight:700; font-size:12.8px; color:var(--text);}
+  .slot-meta{font-size:11px; color:var(--text-muted); margin-top:2px;}
+  .slot-room{font-size:10.5px; color:var(--accent); font-weight:700; margin-top:3px;}
+  .slot-empty{color:#C7CCE0; font-size:11px; text-align:center;}
+  .panel-scroll{overflow-x:auto;}
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="schedule-banner">
+    <i class="fas fa-ruler deco d1"></i>
+    <i class="fas fa-book deco d2"></i>
+    <i class="fas fa-pencil deco d3"></i>
+    <i class="fas fa-calculator deco d4"></i>
+    <h2>Class Schedule</h2>
+    {% if request.user.profile.role == 'student' %}
+      <p>Your weekly class schedule for your department, shift &amp; semester.</p>
+    {% else %}
+      <p>Your weekly teaching schedule — only classes assigned to you are listed.</p>
+    {% endif %}
+  </div>
+
+  <div class="card panel-scroll">
+    {% if rows %}
+      <table class="schedule-grid">
+        <thead>
+          <tr>
+            <th><span class="th-pill time-head">Time</span></th>
+            {% for day in days %}
+              <th><span class="th-pill">{{ day }}</span></th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td><div class="time-cell">{{ row.start_time }}<br>–<br>{{ row.end_time }}</div></td>
+              {% for cell in row.cells %}
+                {% if cell %}
+                  <td class="slot-cell filled">
+                    <div class="slot-subject">{{ cell.subject }}</div>
+                    {% if request.user.profile.role == 'student' %}
+                      <div class="slot-meta">{% if cell.teacher %}{{ cell.teacher.first_name }} {{ cell.teacher.last_name }}{% else %}—{% endif %}</div>
+                    {% else %}
+                      <div class="slot-meta">{{ cell.department.name }}</div>
+                    {% endif %}
+                    <div class="slot-room">Room {{ cell.room_no }}</div>
+                  </td>
+                {% else %}
+                  <td class="slot-cell"><div class="slot-empty">—</div></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">
+        {% if request.user.profile.role == 'student' %}
+          No classes scheduled yet for your department, shift &amp; semester.
+        {% else %}
+          No classes assigned to you yet.
+        {% endif %}
+      </p>
+    {% endif %}
+  </div>
+{% endblock %}

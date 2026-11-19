@@ -1,0 +1,211 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher ID Card — {{ teacher.first_name }} {{ teacher.last_name }}</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --accent:#4F7CFF;
+    --sidebar-bg:#0E1130;
+    --sidebar-bg-2:#151936;
+    --text:#161B33;
+    --text-muted:#6B7291;
+    --border:#E7EAF4;
+    --bg:#F3F5FB;
+    --gold:#C6952F;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',-apple-system,sans-serif;
+    min-height:100vh;
+  }
+
+  /* ===== Screen toolbar (hidden on print) ===== */
+  .toolbar{
+    position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:10px;
+    padding:14px 22px; background:#fff; border-bottom:1px solid var(--border);
+  }
+  .toolbar h5{margin:0; font-family:'Sora',sans-serif; font-size:15px;}
+  .toolbar .spacer{flex:1;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border);
+    background:#fff; color:var(--text); padding:9px 16px; border-radius:10px;
+    font-weight:600; font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn:hover{filter:brightness(0.97);}
+
+  /* ===== Card layout on screen ===== */
+  .stage{
+    display:flex; flex-wrap:wrap; gap:34px; justify-content:center;
+    padding:40px 20px 60px;
+  }
+  .card-id{
+    width:3.375in; height:2.125in;
+    border-radius:14px; overflow:hidden; position:relative;
+    background:#fff; box-shadow:0 6px 18px rgba(20,25,60,.12), 0 2px 6px rgba(20,25,60,.08);
+    border:1px solid var(--border);
+    display:flex; flex-direction:column;
+  }
+  .card-label{
+    text-align:center; font-size:11.5px; color:var(--text-muted); font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;
+  }
+
+  /* ---- FRONT ---- */
+  .card-front .band{
+    background:linear-gradient(135deg,var(--sidebar-bg),var(--sidebar-bg-2));
+    color:#fff; padding:9px 12px; display:flex; align-items:center; gap:8px;
+  }
+  .brand-mark{
+    width:22px; height:22px; border-radius:6px;
+    background:linear-gradient(135deg,var(--gold),#E7C877);
+    display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; color:#3a2c05;
+  }
+  .band .school{font-family:'Sora',sans-serif; font-weight:700; font-size:11.5px; line-height:1.15;}
+  .band .school small{display:block; font-weight:500; font-size:8px; color:#B8BEE8; letter-spacing:.06em; text-transform:uppercase;}
+  .band .role-pill{
+    margin-left:auto; background:rgba(198,149,47,.25); border:1px solid var(--gold);
+    color:#fff; font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    padding:3px 8px; border-radius:20px;
+  }
+  .card-front .body{
+    flex:1; display:flex; gap:10px; padding:10px 12px 6px;
+  }
+  .photo-wrap{flex-shrink:0;}
+  .id-photo{
+    width:62px; height:74px; border-radius:8px; object-fit:cover;
+    border:2px solid var(--gold); background:var(--bg);
+  }
+  .id-photo-placeholder{
+    width:62px; height:74px; border-radius:8px; border:2px solid var(--gold);
+    background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--text-muted);
+  }
+  .id-info{flex:1; min-width:0;}
+  .id-name{font-family:'Sora',sans-serif; font-weight:700; font-size:14px; line-height:1.15; margin:0 0 2px; word-break:break-word;}
+  .id-roll{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); font-weight:700; margin-bottom:6px;
+  }
+  .id-meta{font-size:9.5px; color:var(--text-muted); line-height:1.55;}
+  .id-meta b{color:var(--text); font-weight:600;}
+  .qr-box{
+    flex-shrink:0; width:46px; height:46px; padding:2px; background:#fff;
+    border:1px solid var(--border); border-radius:6px; display:flex; align-items:center; justify-content:center;
+  }
+  .qr-box img, .qr-box canvas{width:100%; height:100%;}
+  .card-front .foot{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 12px 9px; border-top:1px dashed var(--border); margin-top:auto;
+  }
+  .valid-thru{font-size:8px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em;}
+  .valid-thru b{display:block; font-size:10px; color:var(--text); font-family:'JetBrains Mono',monospace; letter-spacing:0;}
+  .sig{text-align:right;}
+  .sig .line{width:90px; border-bottom:1px solid var(--text-muted); margin-bottom:2px;}
+  .sig span{font-size:7.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em;}
+
+  /* ---- BACK ---- */
+  .card-back{padding:12px 14px; text-align:center;}
+  .card-back .brand-mark{margin:0 auto 6px;}
+  .card-back h6{font-family:'Sora',sans-serif; font-size:11.5px; margin:0 0 2px; font-weight:700;}
+  .card-back .addr{font-size:9px; color:var(--text-muted); line-height:1.5; margin-bottom:8px;}
+  .card-back .terms{
+    font-size:8px; color:var(--text-muted); line-height:1.5; text-align:left;
+    background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:8px;
+  }
+  .card-back .terms li{margin-bottom:2px;}
+  .barcode-strip{
+    height:26px; background:repeating-linear-gradient(90deg,#161B33 0 2px, transparent 2px 5px);
+    border-radius:3px; margin:0 auto 4px; width:80%;
+  }
+  .barcode-num{font-family:'JetBrains Mono',monospace; font-size:8.5px; letter-spacing:.1em; color:var(--text-muted);}
+
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .stage{padding:0; gap:0.25in; justify-content:flex-start;}
+    .card-id{box-shadow:none; border:1px solid #ccc;}
+    @page{margin:0.35in; size:auto;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <h5><i class="fas fa-id-card me-1"></i> Digital ID Card — Teacher</h5>
+    <div class="spacer"></div>
+    <a href="{% url 'index' %}" class="btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print / Save PDF</button>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="card-label">Front</div>
+      <div class="card-id card-front">
+        <div class="band">
+          <div class="brand-mark"><i class="fas fa-graduation-cap"></i></div>
+          <div class="school">MPI<small>College &amp; Academic Management</small></div>
+          <div class="role-pill">Faculty</div>
+        </div>
+        <div class="body">
+          <div class="photo-wrap">
+            {% if teacher.teacher_image %}
+              <img src="{{ teacher.teacher_image.url }}" class="id-photo" alt="{{ teacher.first_name }}">
+            {% else %}
+              <div class="id-photo-placeholder"><i class="fas fa-user fa-lg"></i></div>
+            {% endif %}
+          </div>
+          <div class="id-info">
+            <p class="id-name">{{ teacher.first_name }} {{ teacher.last_name }}</p>
+            <p class="id-roll">ID: T-{{ teacher.id|stringformat:"05d" }}</p>
+            <div class="id-meta">
+              <b>Dept:</b> {{ teacher.department.name }}<br>
+              <b>Designation:</b> {{ teacher.designation }}<br>
+              <b>Phone:</b> {{ teacher.phone }}
+            </div>
+          </div>
+          <div class="qr-box" id="qr-front"></div>
+        </div>
+        <div class="foot">
+          <div class="valid-thru">Valid Thru<b>Dec {{ card_year }}</b></div>
+          <div class="sig"><div class="line"></div><span>Authorized Signature</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card-label">Back</div>
+      <div class="card-id card-back">
+        <div class="brand-mark"><i class="fas fa-graduation-cap"></i></div>
+        <h6>MPI</h6>
+        <div class="addr">123 College Road, Kushtia, Khulna Division, Bangladesh &nbsp;|&nbsp; +880-000-000000</div>
+        <ul class="terms">
+          <li>This card is the property of MPI and must be carried on campus at all times.</li>
+          <li>If found, please return to the College Administration Office.</li>
+          <li>Loss of this card should be reported immediately for reissue.</li>
+        </ul>
+        <div class="barcode-strip"></div>
+        <div class="barcode-num">FAC-{{ teacher.id|stringformat:"05d" }}</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  (function(){
+    var text = "NPTC-FAC-{{ teacher.id }}-{{ teacher.email|escapejs }}";
+    if (window.QRCode) {
+      new QRCode(document.getElementById('qr-front'), {
+        text: text, width: 90, height: 90,
+        colorDark: "#161B33", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Student - MPI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+    function previewEditImage(input) {
+        const preview = document.getElementById('editImgPreview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    </script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Edit Student Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="mb-3 text-center">
+                                <label class="form-label d-block">Student Photo</label>
+                                <div class="mb-2">
+                                    {% if student.student_image %}
+                                        <img id="editImgPreview" src="{{ student.student_image.url }}" alt="{{ student.first_name }}" class="rounded-circle border" style="width:90px; height:90px; object-fit:cover;">
+                                    {% else %}
+                                        <img id="editImgPreview" src="" alt="" class="rounded-circle border d-none" style="width:90px; height:90px; object-fit:cover;">
+                                    {% endif %}
+                                </div>
+                                <input type="file" name="student_image" accept="image/*" class="form-control" style="max-width:320px; margin:0 auto;" onchange="previewEditImage(this)">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="first_name" value="{{ student.first_name }}" class="form-control" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="last_name" value="{{ student.last_name }}" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Roll</label>
+                                <input type="text" name="roll" value="{{ student.roll }}" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" name="phone" value="{{ student.phone }}" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" value="{{ student.email }}" class="form-control" required>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Update Student</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

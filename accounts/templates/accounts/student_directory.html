@@ -1,0 +1,98 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}Student Directory{% endblock %}
+{% block role_label %}Faculty Portal{% endblock %}
+{% block role_pill %}Teacher{% endblock %}
+{% block header_title %}Student Directory{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'teacher_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  {% if teacher %}
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <a class="side-link" href="{% url 'my_attendance' %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+  {% endif %}
+  <a class="side-link active" href="{% url 'student_directory' %}"><i class="fas fa-users"></i> Student Directory</a>
+  <a class="side-link" href="{% url 'enter_exam_marks_form' %}"><i class="fas fa-pen"></i> Enter Exam Marks</a>
+  <a class="side-link" href="{% url 'mark_student_attendance_form' %}"><i class="fas fa-clipboard-check"></i> Mark Student Attendance</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .student-cell{display:flex; align-items:center; gap:10px;}
+  .avatar-sm{width:34px; height:34px; border-radius:9px; object-fit:cover; border:1.5px solid var(--accent); flex-shrink:0; background:var(--bg);}
+  .avatar-sm-placeholder{
+    width:34px; height:34px; border-radius:9px; border:1.5px solid var(--accent); background:var(--bg);
+    display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex-shrink:0; font-size:12px;
+  }
+  .roll-cell{font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:600; font-size:12px;}
+  .contact-cell{font-size:12px; color:var(--text-muted);}
+  .contact-cell i{width:14px; color:var(--accent);}
+  .count-pill{
+    font-size:11.5px; color:var(--text-muted); background:var(--surface); border:1px solid var(--border);
+    padding:5px 12px; border-radius:20px; font-weight:600;
+  }
+  .card-head-row{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-head-row">
+      <h2 style="margin-bottom:4px;"><i class="fas fa-users"></i> Student Directory</h2>
+      <span class="count-pill">{{ students|length }} students</span>
+    </div>
+    <p style="color:var(--text-muted); font-size:13px; margin:0 0 16px;">Read-only view. Contact administration for any record changes.</p>
+
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:18px;">
+      <div>
+        <label for="semester" style="display:block; font-size:13px; margin-bottom:4px;">Semester</label>
+        <select name="semester" id="semester">
+          <option value="">All Semesters</option>
+          {% for sem_value, sem_label in semester_choices %}
+            <option value="{{ sem_value }}" {% if sem_value == semester %}selected{% endif %}>{{ sem_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="link-btn"><i class="fas fa-filter"></i> View</button>
+    </form>
+
+    {% if students %}
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th><th>Roll</th><th>Department</th><th>Shift / Semester</th><th>Contact</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>
+            <div class="student-cell">
+              {% if s.student_image %}
+                <img src="{{ s.student_image.url }}" class="avatar-sm" alt="{{ s.first_name }}">
+              {% else %}
+                <div class="avatar-sm-placeholder"><i class="fas fa-user"></i></div>
+              {% endif %}
+              <span>{{ s.first_name }} {{ s.last_name }}</span>
+            </div>
+          </td>
+          <td class="roll-cell">{{ s.roll }}</td>
+          <td>{{ s.department.name }}</td>
+          <td>{{ s.get_shift_display }} · {{ s.get_semester_display }}</td>
+          <td class="contact-cell">
+            <div><i class="fas fa-phone"></i> {{ s.phone }}</div>
+            <div><i class="fas fa-envelope"></i> {{ s.email }}</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+      <p class="empty">No students found.</p>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}My Attendance{% endblock %}
+{% block role_label %}Faculty Portal{% endblock %}
+{% block role_pill %}Teacher{% endblock %}
+{% block header_title %}My Attendance{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'teacher_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  {% if teacher %}
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <a class="side-link active" href="{% url 'my_attendance' %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+  {% endif %}
+  <a class="side-link" href="{% url 'student_directory' %}"><i class="fas fa-users"></i> Student Directory</a>
+  <a class="side-link" href="{% url 'enter_exam_marks_form' %}"><i class="fas fa-pen"></i> Enter Exam Marks</a>
+  <a class="side-link" href="{% url 'mark_student_attendance_form' %}"><i class="fas fa-clipboard-check"></i> Mark Student Attendance</a>
+{% endblock %}
+
+{% block content %}
+{% if teacher %}
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Total Days</div><div class="value">{{ total }}</div></div>
+    <div class="stat-card"><div class="label">Present</div><div class="value" style="color:var(--success);">{{ present }}</div></div>
+    <div class="stat-card"><div class="label">Absent</div><div class="value" style="color:var(--danger);">{{ absent }}</div></div>
+    <div class="stat-card"><div class="label">Late</div><div class="value" style="color:var(--warning);">{{ late }}</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Records — {{ month_label }}</h2>
+    {% if records %}
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.date|date:"d M Y" }}</td>
+          <td>
+            <span class="badge {% if r.status == 'Present' %}badge-success{% elif r.status == 'Late' %}badge-warning{% else %}badge-danger{% endif %}">{{ r.status }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+      <p class="empty">No attendance records yet.</p>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="card">
+    <p class="empty">No teacher profile linked.</p>
+  </div>
+{% endif %}
+{% endblock %}

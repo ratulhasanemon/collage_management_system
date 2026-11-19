@@ -1,0 +1,128 @@
+{% extends "accounts/base_dashboard.html" %}
+{% block page_title %}Mark Student Attendance{% endblock %}
+{% block role_label %}Faculty Portal{% endblock %}
+{% block role_pill %}Teacher{% endblock %}
+{% block header_title %}Mark Student Attendance{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-group-label">Menu</div>
+  <a class="side-link" href="{% url 'teacher_dashboard' %}"><i class="fas fa-gauge"></i> Overview</a>
+  {% if teacher %}
+  <a class="side-link" href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a class="side-link" href="{% url 'get_class_routine' %}"><i class="fas fa-calendar-days"></i> Class Routine</a>
+  <a class="side-link" href="{% url 'get_exam_routine' %}"><i class="fas fa-file-circle-check"></i> Exam Routine</a>
+  <a class="side-link" href="{% url 'my_attendance' %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+  {% endif %}
+  <a class="side-link" href="{% url 'student_directory' %}"><i class="fas fa-users"></i> Student Directory</a>
+  <a class="side-link" href="{% url 'enter_exam_marks_form' %}"><i class="fas fa-pen"></i> Enter Exam Marks</a>
+  <a class="side-link active" href="{% url 'mark_student_attendance_form' %}"><i class="fas fa-clipboard-check"></i> Mark Student Attendance</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .narrow-wrap{max-width:860px;}
+  .msg{display:flex; gap:8px; font-size:13px; font-weight:600; padding:10px 14px; border-radius:10px; margin-bottom:16px;}
+  .msg-success{background:#1CB88414; color:var(--success); border:1px solid #1CB88433;}
+  .msg-error{background:#F0506E14; color:var(--danger); border:1px solid #F0506E33;}
+  .toolbar{display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .toolbar label{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);}
+  .toolbar input[type="date"]{padding:9px 12px; border:1px solid var(--border); border-radius:10px; font-size:13.5px;}
+  .mark-all{margin-left:auto; display:flex; gap:8px;}
+  .mark-all button{border:1px solid var(--border); background:var(--surface); border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer;}
+  .mark-all button:hover{border-color:var(--accent-dim); color:var(--accent);}
+  .status-radios{display:flex; gap:14px;}
+  .status-radios label{display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; cursor:pointer;}
+  .status-radios input{accent-color:var(--accent);}
+  .submit-btn{border:0; border-radius:10px; padding:12px 22px; font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#fff; background:var(--accent); cursor:pointer; margin-top:6px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="narrow-wrap">
+  <p style="color:var(--text-muted); font-size:13px; margin:-6px 0 18px;">Only students from your classes (based on your routine) are listed below.</p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
+        <i class="fas fa-circle-{% if message.tags == 'error' %}exclamation{% else %}check{% endif %}"></i> {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
+    <div>
+      <label for="semester" style="display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:6px;">Filter by Semester</label>
+      <select name="semester" id="semester" style="padding:9px 12px; border:1px solid var(--border); border-radius:10px; font-size:13.5px;">
+        <option value="">All Semesters</option>
+        {% for sem_value, sem_label in semester_choices %}
+          <option value="{{ sem_value }}" {% if sem_value == semester %}selected{% endif %}>{{ sem_label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="link-btn"><i class="fas fa-filter"></i> Apply</button>
+  </form>
+
+  <form method="POST" id="attendance-form">
+    {% csrf_token %}
+    <input type="hidden" name="semester" value="{{ semester }}">
+    <div class="toolbar">
+      <label for="att_date">Date</label>
+      <input type="date" name="att_date" id="att_date" value="{{ today|date:'Y-m-d' }}" required>
+      <div class="mark-all">
+        <button type="button" onclick="markAll('Present')"><i class="fas fa-check"></i> Mark all Present</button>
+        <button type="button" onclick="markAll('Absent')"><i class="fas fa-xmark"></i> Mark all Absent</button>
+      </div>
+    </div>
+
+    <div class="card">
+      {% if students %}
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Roll</th><th>Student</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for s in students %}
+              <tr>
+                <td>{{ s.roll }}</td>
+                <td>{{ s.first_name }} {{ s.last_name }}</td>
+                <td>
+                  <div class="status-radios">
+                    <label><input type="radio" name="status_{{ s.id }}" value="Present" checked> Present</label>
+                    <label><input type="radio" name="status_{{ s.id }}" value="Absent"> Absent</label>
+                    <label><input type="radio" name="status_{{ s.id }}" value="Late"> Late</label>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      {% else %}
+        <p class="empty">No students found for your classes yet. Make sure your class routine is set up.</p>
+      {% endif %}
+    </div>
+
+    {% if students %}
+      <button type="submit" class="submit-btn"><i class="fas fa-floppy-disk"></i> Save Attendance</button>
+    {% endif %}
+  </form>
+</div>
+
+<script>
+  function syncRow(row, selectedInput){
+    row.querySelectorAll('input[type="radio"]').forEach(function(input){
+      input.checked = (input === selectedInput);
+    });
+  }
+  function markAll(status){
+    document.querySelectorAll('.status-radios').forEach(function(row){
+      const target = row.querySelector('input[value="' + status + '"]');
+      if (target) syncRow(row, target);
+    });
+  }
+  document.querySelectorAll('.status-radios').forEach(function(row){
+    row.querySelectorAll('input[type="radio"]').forEach(function(input){
+      input.addEventListener('click', function(){ syncRow(row, input); });
+    });
+  });
+</script>
+{% endblock %}
